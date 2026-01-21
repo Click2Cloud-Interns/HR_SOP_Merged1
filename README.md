@@ -238,55 +238,6 @@ mkdir -p uploads/hc
 
 ---
 
-## ⚙️ Configuration
-
-### Azure OpenAI Setup
-
-1. **Create Azure OpenAI Resource:**
-   - Go to [Azure Portal](https://portal.azure.com)
-   - Create a new Azure OpenAI resource
-   - Note your endpoint URL
-
-2. **Deploy Models:**
-   - Deploy `text-embedding-ada-002` (for embeddings)
-   - Deploy `gpt-4` or `gpt-4.1-mini` (for chat)
-   - Note the exact deployment names
-
-3. **Get API Key:**
-   - Navigate to Keys and Endpoint
-   - Copy one of the keys
-
-4. **Update .env:**
-   ```env
-   AZURE_OPENAI_ENDPOINT=https://your-actual-resource.openai.azure.com/
-   AZURE_OPENAI_KEY=your-actual-api-key
-   AZURE_EMBEDDING_DEPLOYMENT=your-embedding-deployment-name
-   AZURE_CHAT_DEPLOYMENT=your-chat-deployment-name
-   ```
-
-### Document Preparation
-
-#### SOP Documents (Markdown Format)
-Place `.md` files in `data/sop_documents/` with this structure:
-
-```markdown
-Document ID: SOP-MFG-2024-018
-Title: Aseptic Filling Operations
-Version: 1.0
-Effective Date: 2024-01-15
-
-## 1. Purpose
-...
-
-## 2. Scope
-...
-```
-
-#### HC Documents (PDF/DOCX)
-- Place PDF or DOCX files in `data/hc_documents/`
-- OR upload via the web interface
-
----
 
 ## 🚀 Usage
 
@@ -342,124 +293,19 @@ curl http://localhost:8000/status
 
 ---
 
-## 📚 API Documentation
-
-### Base URL
-```
-http://localhost:8000
-```
-
-### Endpoints
-
-#### 🔵 SOP Agent
-
-**POST /sop/ask**
-
-Ask questions about SOPs and work procedures.
-
-```json
-Request:
-{
-  "question": "What is the temperature for aseptic filling?"
-}
-
-Response:
-{
-  "answer": "The aseptic filling area must maintain...",
-  "sources": [
-    {
-      "document_id": "SOP-MFG-2024-018",
-      "title": "Aseptic Filling Operations",
-      "doc_type": "Standard Operating Procedure",
-      "filename": "SOP-MFG-2024-018.md"
-    }
-  ],
-  "chunks": 4,
-  "agent": "SOP Assistant"
-}
-```
-
-#### 🟢 HC Agent
-
-**POST /hc/upload**
-
-Upload and process HR documents (PDF/DOCX).
-
-```
-Content-Type: multipart/form-data
-file: <binary file data>
-
-Response:
-{
-  "status": "success",
-  "message": "Document processed successfully. Created 127 chunks.",
-  "chunks_created": 127
-}
-```
-
-**POST /hc/ask**
-
-Ask questions about HR policies and benefits.
-
-```json
-Request:
-{
-  "question": "What is the notice period?"
-}
-
-Response:
-{
-  "answer": "The notice period is one month...",
-  "sources": [...],
-  "chunks": 4,
-  "agent": "Human Capital Assistant"
-}
-```
-
-#### ⚙️ System
-
-**GET /status**
-
-Check system health and agent status.
-
-```json
-Response:
-{
-  "sop_agent_ready": true,
-  "hc_agent_ready": true,
-  "sop_index_exists": true,
-  "hc_index_exists": true,
-  "env_loaded": true,
-  "azure_endpoint": "https://your-resource.openai.azure.com/",
-  "embedding_model": "text-embedding-ada-002",
-  "chat_model": "gpt-4.1-mini"
-}
-```
-
-**GET /**
-
-Get API information and available endpoints.
-
-**GET /docs**
-
-Interactive Swagger UI documentation.
-
----
-
 ## 📁 Project Structure
 
 ```
 biofarma-ai-assistant/
 ├── .env                      # Environment variables (not in repo)
-├── .gitignore               # Git ignore file
 ├── README.md                # This file
 ├── requirements.txt         # Python dependencies
 ├── config.py                # Configuration settings
 ├── prompts.py               # System prompts for agents
 ├── agents.py                # Agent class implementations
-├── ingest_unified.py        # Document ingestion script
+├── ingest.py                # Document ingestion script
 ├── api.py                   # FastAPI backend
-├── app_final.py             # Streamlit frontend
+├── streamlit.py             # Streamlit frontend
 ├── data/
 │   ├── sop_documents/       # SOP markdown files
 │   │   ├── SOP-MFG-2024-018.md
@@ -475,32 +321,6 @@ biofarma-ai-assistant/
 ```
 
 ---
-
-## 👨‍💻 Development
-
-### Running Tests
-```bash
-# Install dev dependencies
-pip install pytest pytest-cov
-
-# Run tests
-pytest tests/ -v
-
-# With coverage
-pytest tests/ --cov=. --cov-report=html
-```
-
-### Code Quality
-```bash
-# Format code
-black .
-
-# Lint code
-flake8 .
-
-# Type checking
-mypy .
-```
 
 ### Adding New Agents
 
@@ -535,150 +355,6 @@ AGENT_CONFIGS["New Agent"] = {
 
 ---
 
-## 🐛 Troubleshooting
 
-### Common Issues
-
-#### 1. ImportError: cannot import name 'RetrievalQA'
-
-**Solution:**
-```bash
-pip uninstall langchain langchain-openai langchain-community -y
-pip cache purge
-pip install -r requirements.txt
-```
-
-#### 2. FileNotFoundError: Vector store not found
-
-**Solution:**
-```bash
-# For SOP
-python ingest_unified.py sop
-
-# For HC
-python ingest_unified.py hc
-# OR upload via web interface
-```
-
-#### 3. Connection refused (Backend API not running)
-
-**Solution:**
-```bash
-# Make sure API is running
-python api.py
-
-# Check if port 8000 is available
-netstat -an | grep 8000
-```
-
-#### 4. Azure OpenAI 401 Unauthorized
-
-**Solution:**
-- Verify API key in `.env` file
-- Check endpoint URL (no trailing `/openai/deployments/...`)
-- Ensure deployment names match exactly
-- Verify API key hasn't expired
-
-#### 5. Streamlit connection error
-
-**Solution:**
-```bash
-# Make sure both servers are running
-# Terminal 1
-python api.py
-
-# Terminal 2
-streamlit run app_final.py
-```
-
-### Debug Mode
-
-Enable verbose logging:
-
-```python
-# In api.py
-import logging
-logging.basicConfig(level=logging.DEBUG)
-```
-
-Check agent status:
-```bash
-curl http://localhost:8000/status | jq
-```
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please follow these steps:
-
-1. **Fork the Repository**
-2. **Create a Feature Branch**
-   ```bash
-   git checkout -b feature/amazing-feature
-   ```
-3. **Commit Your Changes**
-   ```bash
-   git commit -m 'Add amazing feature'
-   ```
-4. **Push to Branch**
-   ```bash
-   git push origin feature/amazing-feature
-   ```
-5. **Open a Pull Request**
-
-### Contribution Guidelines
-
-- Follow PEP 8 style guide
-- Add tests for new features
-- Update documentation
-- Keep commits atomic and meaningful
-- Add docstrings to functions
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- **Azure OpenAI** for powerful language models
-- **LangChain** for RAG framework
-- **FastAPI** for modern API development
-- **Streamlit** for rapid UI prototyping
-- **PT Bio Farma** for the use case and requirements
-
----
-
-## 📞 Support
-
-- **Documentation:** [Wiki](https://github.com/yourusername/biofarma-ai-assistant/wiki)
-- **Issues:** [GitHub Issues](https://github.com/yourusername/biofarma-ai-assistant/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/yourusername/biofarma-ai-assistant/discussions)
-
----
-
-## 🗺 Roadmap
-
-- [ ] Add support for more document formats
-- [ ] Implement conversation memory
-- [ ] Add user authentication
-- [ ] Multi-language support
-- [ ] Advanced analytics dashboard
-- [ ] Mobile app
-- [ ] Integration with Microsoft Teams
-- [ ] Batch document processing
-- [ ] Fine-tuned models for specific domains
-
----
-
-<div align="center">
-
-**Built with ❤️ for PT Bio Farma**
-
-⭐ Star this repo if you find it helpful!
 
 </div>
