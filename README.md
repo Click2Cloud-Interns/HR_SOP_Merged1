@@ -24,14 +24,10 @@
 - [Agents](#-agents)
 - [Tech Stack](#-tech-stack)
 - [Installation](#-installation)
-- [Configuration](#-configuration)
 - [Usage](#-usage)
-- [API Documentation](#-api-documentation)
 - [Project Structure](#-project-structure)
 - [Development](#-development)
-- [Troubleshooting](#-troubleshooting)
-- [Contributing](#-contributing)
-- [License](#-license)
+
 
 ---
 
